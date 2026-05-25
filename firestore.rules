@@ -1,0 +1,10 @@
+rules_version = '2';
+// New databases in "Production" mode deny all reads/writes until you publish rules below.
+// Collection `users`: one document per Auth uid (`users/{userId}`).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

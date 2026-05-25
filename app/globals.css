@@ -1,26 +1,192 @@
 @import "tailwindcss";
+@import "./styles/design-tokens.css";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+html {
+  scroll-behavior: auto;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Loaded via <link> in app/layout.tsx (Material Symbols icon font) */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined", sans-serif !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.material-symbols-outlined.fill {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-variant);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline-variant);
+}
+
+/* Hero: flat base + cyan glow from bottom (no mesh gradients) */
+.hero-bottom-glow::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 72%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 95% 85% at 50% 100%,
+    color-mix(in srgb, var(--color-secondary) 26%, transparent),
+    transparent 78%
+  );
+}
+
+/* Hero mockup: shortcut chip glow (CSS keyframes — React toggles class; avoids GSAP vs React style fights) */
+@keyframes shortcut-chip-glow {
+  0% {
+    border-color: rgba(70, 70, 76, 0.4);
+    box-shadow:
+      inset 0 0 0 0 rgba(93, 230, 255, 0),
+      inset 0 0 0 0 rgba(93, 230, 255, 0);
+  }
+  42% {
+    border-color: rgb(93, 230, 255);
+    box-shadow:
+      inset 0 0 0 1px rgba(93, 230, 255, 0.75),
+      inset 0 0 14px 0 rgba(93, 230, 255, 0.28);
+  }
+  100% {
+    border-color: rgba(70, 70, 76, 0.4);
+    box-shadow:
+      inset 0 0 0 0 rgba(93, 230, 255, 0),
+      inset 0 0 0 0 rgba(93, 230, 255, 0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.shortcut-chip-glow {
+  animation: shortcut-chip-glow 0.95s ease-in-out 1;
+}
+
+/* Typewriter caret used inside fake prompt boxes */
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.caret-blink {
+  animation: caret-blink 1s steps(2) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret-blink {
+    animation: none;
+  }
+}
+
+/* Mac-style key cap press: translate down + white border, no shadow */
+@keyframes key-press-pulse {
+  0%,
+  6%,
+  20%,
+  100% {
+    transform: translateY(0);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 1px 0 rgba(0, 0, 0, 0.45);
+    border-color: rgba(67, 71, 84, 0.4);
+  }
+  10%,
+  16% {
+    transform: translateY(1px);
+    box-shadow: none;
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.key-press-pulse {
+  animation: key-press-pulse 3800ms ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key-press-pulse {
+    animation: none;
+  }
+}
+
+/* Muted Mac-style wallpaper — grey base with soft radial blobs */
+.wallpaper-bg {
+  background-color: #16191f;
+  background-image:
+    radial-gradient(
+      60% 60% at 18% 12%,
+      rgba(120, 140, 170, 0.22),
+      transparent 65%
+    ),
+    radial-gradient(
+      55% 55% at 82% 88%,
+      rgba(70, 90, 110, 0.28),
+      transparent 70%
+    ),
+    radial-gradient(
+      70% 70% at 50% 50%,
+      rgba(45, 55, 75, 0.35),
+      transparent 75%
+    );
+}
+
+/* Faux text selection highlight — instant by default. Add `is-animated` to opt into a sweep transition. */
+.selection-sweep {
+  display: inline-block;
+  background-image: linear-gradient(
+    to right,
+    rgba(93, 230, 255, 0.45),
+    rgba(93, 230, 255, 0.45)
+  );
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+.selection-sweep.is-selected {
+  background-size: 100% 100%;
+}
+
+.selection-sweep.is-animated {
+  transition: background-size 400ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selection-sweep.is-animated {
+    transition: none;
+  }
+}
+
+@layer base {
+  html {
+    @apply font-sans;
+  }
 }
