@@ -42,7 +42,7 @@ type RazorpayHandler = (response: RazorpayPaymentResponse) => void | Promise<voi
 
 type RazorpayInstance = {
   open(): void;
-  on(event: "payment.failed", cb: (response: unknown) => void): void;
+  on(event: "payment.failed", cb: (response: RazorpayFailureResponse) => void): void;
 };
 
 type RazorpayOptions = {
