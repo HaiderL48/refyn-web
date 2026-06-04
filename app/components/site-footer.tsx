@@ -49,7 +49,7 @@ export function SiteFooter() {
                 </span>
               </span>
               <span className="text-xs font-bold tracking-tight text-on-surface">
-                PromptRefine
+                RefynAI
               </span>
             </Link>
             <p className={`mt-2.5 text-xs leading-relaxed ${footerMuted}`}>
@@ -68,7 +68,7 @@ export function SiteFooter() {
       <div className="border-t border-outline-variant/50">
         <div className="mx-auto max-w-container-max px-4 py-3 sm:px-6 md:px-margin-desktop">
           <p className={`text-[11px] ${footerMuted}`}>
-            © {year} PromptRefine. All rights reserved.
+            © {year} RefynAI. All rights reserved.
           </p>
         </div>
       </div>

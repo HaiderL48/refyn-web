@@ -72,7 +72,7 @@ export function Navbar() {
             </span>
           </div>
           <span className="truncate text-xs font-bold tracking-tight text-on-surface sm:text-sm md:text-base">
-            PromptRefine
+            RefynAI
           </span>
         </Link>
 

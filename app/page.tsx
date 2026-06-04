@@ -1,4 +1,4 @@
-import { AppsMarquee } from "./components/landing/apps-marquee";
+import { HomePageJsonLd } from "./components/seo/json-ld";
 import { BeforeAfter } from "./components/landing/before-after";
 import { FeaturesSection } from "./components/landing/features-section";
 import { LessRewritingSection } from "./components/landing/less-rewriting-section";
@@ -41,6 +41,7 @@ function SectionShell({
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
+      <HomePageJsonLd />
       <Navbar />
       <Hero />
       {/* <AppsMarquee /> */}

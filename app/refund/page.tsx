@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
 import { LegalDocumentLayout } from "@/app/components/legal/legal-document-layout";
 import { LegalSection } from "@/app/components/legal/legal-section";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Refund Policy — PromptRefine",
-  description: "Refund eligibility and process for PromptRefine paid plans.",
-};
+export const metadata = createPageMetadata({
+  title: "Refund Policy",
+  description: "Refund eligibility and process for RefynAI paid plans.",
+  path: "/refund",
+});
 
 const LAST_UPDATED = "May 16, 2026";
 
@@ -13,12 +14,12 @@ export default function RefundPage() {
   return (
     <LegalDocumentLayout
       title="Refund Policy"
-      description="How refunds work for PromptRefine subscriptions and one-time purchases."
+      description="How refunds work for RefynAI subscriptions and one-time purchases."
       lastUpdated={LAST_UPDATED}
     >
       <LegalSection title="1. Overview">
         <p>
-          We want you to be satisfied with PromptRefine. This policy explains when
+          We want you to be satisfied with RefynAI. This policy explains when
           refunds may be available for paid plans processed through our website or
           payment partners (e.g. Razorpay).
         </p>
@@ -97,7 +98,7 @@ export default function RefundPage() {
 
       <LegalSection title="10. Contact">
         <p>
-          Refund requests: use the support contact on promptrefine.com or in the app.
+          Refund requests: use the support contact on this website or in the app.
         </p>
       </LegalSection>
     </LegalDocumentLayout>

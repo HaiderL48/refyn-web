@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { apiRefynUrl } from "@/lib/api-refyn-client";
+import { getAuthSession } from "@/lib/auth-session";
 import { getFreshIdToken } from "@/lib/fresh-id-token";
-import { syncApiSession } from "@/lib/sync-api-session";
+import { syncApiSessionWithToken } from "@/lib/sync-api-session";
 
 type CtaVariant = "muted" | "emphasis";
 
@@ -79,14 +80,6 @@ const styles: Record<CtaVariant, string> = {
   emphasis: "bg-white text-black hover:bg-white/92",
 };
 
-function apiBase() {
-  const raw = process.env.NEXT_PUBLIC_API_REFYN_URL?.trim();
-  if (!raw) {
-    throw new Error("NEXT_PUBLIC_API_REFYN_URL is not configured.");
-  }
-  return raw.replace(/\/$/, "");
-}
-
 function parseErrorMessage(raw: string, fallback: string) {
   try {
     const body = JSON.parse(raw) as { error?: string; message?: string };
@@ -121,7 +114,7 @@ function ensureRazorpayLoaded(): Promise<void> {
 }
 
 async function createOrder(token: string, packageId: string): Promise<CreateOrderResponse> {
-  const res = await fetch(`${apiBase()}/api/billing/orders`, {
+  const res = await fetch(apiRefynUrl("/api/billing/orders"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -142,7 +135,7 @@ async function verifyPayment(
   packageId: string,
   payment: RazorpayPaymentResponse,
 ): Promise<void> {
-  const res = await fetch(`${apiBase()}/api/billing/verify`, {
+  const res = await fetch(apiRefynUrl("/api/billing/verify"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -187,7 +180,7 @@ async function openCheckout(
       key: order.keyId,
       amount: order.order.amount,
       currency: order.order.currency,
-      name: "Refyn",
+      name: "RefynAI",
       description: "Subscription payment",
       order_id: order.order.id,
       prefill: {
@@ -228,14 +221,13 @@ export function PricingCheckoutButton({ packageId, label, variant }: PricingChec
     setStatusText("");
     setBusy(true);
     try {
-      const auth = getFirebaseAuth();
-      const user = auth.currentUser;
-      if (!user) {
+      const session = getAuthSession();
+      if (!session) {
         throw new Error("Please sign in first from the top-right account button.");
       }
 
-      await syncApiSession(user);
-      let token = await getFreshIdToken(user);
+      await syncApiSessionWithToken(session.idToken);
+      let token = await getFreshIdToken();
 
       if (packageId === "free") {
         setStatusText("Free plan is active for your account.");
@@ -246,11 +238,11 @@ export function PricingCheckoutButton({ packageId, label, variant }: PricingChec
       const order = await createOrder(token, packageId);
       const payment = await openCheckout(
         order,
-        user.displayName || "",
-        user.email || "",
+        session.displayName || session.profile?.displayName || "",
+        session.email || session.profile?.email || "",
       );
 
-      token = await getFreshIdToken(user);
+      token = await getFreshIdToken();
       await verifyPayment(token, packageId, payment);
       setStatusText("Payment successful. Your plan is now active.");
     } catch (e) {

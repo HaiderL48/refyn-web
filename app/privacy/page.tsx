@@ -1,11 +1,13 @@
-import type { Metadata } from "next";
 import { LegalDocumentLayout } from "@/app/components/legal/legal-document-layout";
 import { LegalSection } from "@/app/components/legal/legal-section";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy — PromptRefine",
-  description: "How PromptRefine and Refyn collect, use, and protect your information.",
-};
+export const metadata = createPageMetadata({
+  title: "Privacy Policy",
+  description:
+    "How RefynAI collects, uses, and protects your information.",
+  path: "/privacy",
+});
 
 const LAST_UPDATED = "May 16, 2026";
 
@@ -18,7 +20,7 @@ export default function PrivacyPage() {
     >
       <LegalSection title="1. Overview">
         <p>
-          PromptRefine / Refyn is designed so most enhancement work happens on your
+          RefynAI is designed so most enhancement work happens on your
           device. This policy describes data handled by our website, account
           services, and optional cloud features.
         </p>
@@ -128,7 +130,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="12. Contact">
         <p>
-          Privacy questions: use the contact method on promptrefine.com or in the
+          Privacy questions: use the contact method on this website or in the
           app.
         </p>
       </LegalSection>

@@ -1,18 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
-import { getFirebaseAuth } from "@/lib/firebase";
-import { getFreshIdToken } from "@/lib/fresh-id-token";
-
-const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: "select_account" });
-
-function apiBase() {
-  const raw = process.env.NEXT_PUBLIC_API_REFYN_URL || "https://refynai.haidelimdi.workers.dev";
-  return raw.replace(/\/$/, "");
-}
+import {
+  getAuthSession,
+  getValidIdToken,
+  googleSignInUrl,
+} from "@/lib/auth-session";
+import { apiRefynUrl } from "@/lib/api-refyn-client";
 
 function desktopAppUrl() {
   return process.env.NEXT_PUBLIC_REFYN_DESKTOP_URL || "renfy://auth-complete";
@@ -21,23 +16,19 @@ function desktopAppUrl() {
 function toFriendlyError(raw: unknown) {
   const text = String((raw as Error)?.message || raw || "");
   if (text.includes("device_code_not_found") || text.includes('"error":"device_code_not_found"')) {
-    return "This sign-in session expired or api_refyn was restarted. Go back to Refyn desktop and click Sign in with Google again.";
+    return "This sign-in session expired or the API was restarted. Go back to RefynAI desktop and click Sign in with Google again.";
   }
   if (text.includes("device_code_expired")) {
-    return "This sign-in code expired. Start sign-in again from Refyn desktop.";
+    return "This sign-in code expired. Start sign-in again from RefynAI desktop.";
   }
   try {
     const parsed = JSON.parse(text) as { error?: string; message?: string; hint?: string };
     if (parsed.error === "invalid_token") {
       const detail = [parsed.message, parsed.hint].filter(Boolean).join(" — ");
-      return detail ||
-        "Google sign-in succeeded but the API could not verify your token. Ensure refyn-web uses Firebase project refyn-5f0cf.";
+      return detail || "Sign-in failed. Try again from the desktop app.";
     }
   } catch {
     /* not JSON */
-  }
-  if (text.includes("invalid_token")) {
-    return "Google sign-in succeeded but the API could not verify your token. Ensure refyn-web uses Firebase project refyn-5f0cf.";
   }
   return text || "Sign-in failed. Please try again.";
 }
@@ -50,10 +41,9 @@ function DesktopLoginInner() {
   const [openHint, setOpenHint] = useState<string | null>(null);
   const [linked, setLinked] = useState(false);
   const code = useMemo(() => (params.get("code") || "").trim(), [params]);
-  const completedRef = useRef(false);
 
   async function completeDesktopLoginWithToken(idToken: string, refreshToken = "") {
-    const res = await fetch(`${apiBase()}/api/auth/device/complete`, {
+    const res = await fetch(apiRefynUrl("/api/auth/device/complete"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -68,7 +58,6 @@ function DesktopLoginInner() {
     }
     setLinked(true);
     setStatus("You're logged in. Returning to desktop app...");
-    // Try deep-link open back to desktop app; if blocked/unregistered, show fallback hint.
     if (typeof window !== "undefined") {
       setTimeout(() => {
         window.location.href = desktopAppUrl();
@@ -76,7 +65,7 @@ function DesktopLoginInner() {
       setTimeout(() => {
         if (!document.hidden) {
           setOpenHint(
-            "Could not launch desktop app automatically. Click 'Open Refyn Desktop' below or switch to the app manually.",
+            "Could not launch desktop app automatically. Click 'Open RefynAI Desktop' below or switch to the app manually.",
           );
         }
       }, 1400);
@@ -90,7 +79,7 @@ function DesktopLoginInner() {
       setTimeout(() => {
         if (!document.hidden) {
           setOpenHint(
-            "Browser could not open renfy:// yet. Restart Refyn desktop (after latest update) and try again.",
+            "Browser could not open renfy:// yet. Restart RefynAI desktop (after latest update) and try again.",
           );
         }
       }, 1200);
@@ -99,56 +88,44 @@ function DesktopLoginInner() {
 
   useEffect(() => {
     if (!code) return;
-    const auth = getFirebaseAuth();
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user || completedRef.current) return;
-      completedRef.current = true;
-      void (async () => {
-        try {
-          setBusy(true);
-          setError(null);
-          setStatus("Detected existing website login. Linking desktop session...");
-          const idToken = await getFreshIdToken(user);
-          await completeDesktopLoginWithToken(idToken, user.refreshToken || "");
-        } catch (e) {
-          completedRef.current = false;
-          setError(toFriendlyError(e));
-          setStatus(null);
-        } finally {
-          setBusy(false);
-        }
-      })();
-    });
-    return unsub;
+    const session = getAuthSession();
+    if (!session?.idToken) return;
+
+    void (async () => {
+      try {
+        setBusy(true);
+        setError(null);
+        setStatus("Detected existing website login. Linking desktop session...");
+        const idToken = (await getValidIdToken()) || session.idToken;
+        await completeDesktopLoginWithToken(idToken, session.refreshToken || "");
+      } catch (e) {
+        setError(toFriendlyError(e));
+        setStatus(null);
+      } finally {
+        setBusy(false);
+      }
+    })();
   }, [code]);
 
-  async function continueDesktopLogin() {
+  function continueDesktopLogin() {
     if (!code) {
       setError("Missing device code. Re-open sign-in from the desktop app.");
       return;
     }
     setBusy(true);
     setError(null);
-    setStatus("Signing in with Google...");
-    try {
-      const auth = getFirebaseAuth();
-      const { user } = await signInWithPopup(auth, provider);
-      const idToken = await getFreshIdToken(user);
-      setStatus("Linking desktop session...");
-      await completeDesktopLoginWithToken(idToken, user.refreshToken || "");
-    } catch (e) {
-      setError(toFriendlyError(e));
-      setStatus(null);
-    } finally {
-      setBusy(false);
-    }
+    setStatus("Redirecting to Google sign-in…");
+    window.location.href = googleSignInUrl({
+      returnTo: `${window.location.origin}/desktop-login?code=${encodeURIComponent(code)}`,
+      deviceCode: code,
+    });
   }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col items-stretch justify-center gap-4 bg-surface px-6 py-8 text-on-surface">
-      <h1 className="text-3xl font-bold tracking-tight text-on-surface">Sign in to Refyn Desktop</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-on-surface">Sign in to RefynAI Desktop</h1>
       <p className="text-base leading-relaxed text-on-surface-variant">
-        This sign-in page was opened by your desktop app. If you're already logged in on this website, we'll auto-link and return to the app.
+        Sign-in is handled securely by our API — no secrets in this page. After Google approves, you will return to the desktop app automatically.
       </p>
       {!code ? (
         <p className="rounded border border-amber-300/60 bg-amber-100/10 px-3 py-2 text-sm text-amber-100">
@@ -169,7 +146,7 @@ function DesktopLoginInner() {
         <button
           type="button"
           disabled={busy || !code}
-          onClick={() => void continueDesktopLogin()}
+          onClick={() => continueDesktopLogin()}
           className="inline-flex h-11 items-center justify-center rounded-lg bg-secondary px-4 text-sm font-semibold text-on-secondary shadow-[0_0_12px_rgba(93,230,255,0.15)] transition-colors hover:bg-secondary-container disabled:cursor-not-allowed disabled:bg-secondary/40 disabled:text-on-secondary/70"
         >
           {busy ? "Working..." : "Continue with Google"}
@@ -181,7 +158,7 @@ function DesktopLoginInner() {
           onClick={tryOpenDesktopFromButton}
           className="inline-flex h-11 items-center justify-center rounded-lg border border-secondary/50 bg-secondary/10 px-4 text-sm font-semibold text-secondary transition-colors hover:bg-secondary/20"
         >
-          Open Refyn Desktop
+          Open RefynAI Desktop
         </button>
       ) : null}
       {openHint ? (

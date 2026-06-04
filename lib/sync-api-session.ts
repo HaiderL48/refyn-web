@@ -1,4 +1,4 @@
-import type { User } from "firebase/auth";
+import { apiRefynUrl } from "./api-refyn-client";
 import { getFreshIdToken } from "./fresh-id-token";
 
 type SessionErrorBody = {
@@ -8,8 +8,8 @@ type SessionErrorBody = {
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.1.0";
 
-async function postSession(base: string, idToken: string): Promise<Response> {
-  return fetch(`${base}/api/auth/session`, {
+async function postSession(idToken: string): Promise<Response> {
+  return fetch(apiRefynUrl("/api/auth/session"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -26,14 +26,14 @@ function isExpiredTokenResponse(res: Response, body: SessionErrorBody): boolean 
   return body.error === "invalid_token" && Boolean(body.firebaseCode?.includes("expired"));
 }
 
-/** If `NEXT_PUBLIC_API_REFYN_URL` is set, upserts the user profile on the Express API. */
-export async function syncApiSession(user: User): Promise<void> {
-  const raw = process.env.NEXT_PUBLIC_API_REFYN_URL;
-  if (!raw) return;
-  const base = raw.replace(/\/$/, "");
+/** Upserts the user profile on api_refyn using a Firebase ID token. */
+export async function syncApiSessionWithToken(idToken: string): Promise<void> {
+  if (!process.env.NEXT_PUBLIC_API_REFYN_URL?.trim()) return;
 
-  let idToken = await getFreshIdToken(user);
-  let res = await postSession(base, idToken);
+  let token = idToken.trim();
+  if (!token) throw new Error("id_token_required");
+
+  let res = await postSession(token);
 
   if (!res.ok) {
     let body: SessionErrorBody = {};
@@ -43,8 +43,8 @@ export async function syncApiSession(user: User): Promise<void> {
       /* ignore */
     }
     if (isExpiredTokenResponse(res, body)) {
-      idToken = await getFreshIdToken(user);
-      res = await postSession(base, idToken);
+      token = await getFreshIdToken();
+      res = await postSession(token);
     }
   }
 

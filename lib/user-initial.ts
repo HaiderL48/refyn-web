@@ -1,8 +1,6 @@
-import type { User } from "firebase/auth";
-
 /** Single uppercase letter for avatar (name first, then email). */
 export function getUserDisplayInitial(
-  user: Pick<User, "displayName" | "email">,
+  user: Pick<{ displayName?: string | null; email?: string | null }, "displayName" | "email">,
 ): string {
   const name = user.displayName?.trim();
   if (name) return name.charAt(0).toUpperCase();

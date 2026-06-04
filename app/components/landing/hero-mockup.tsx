@@ -167,7 +167,7 @@ export function HeroMockup() {
 
         <div className="mt-auto flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-2 border-t border-outline-variant/[0.12] pt-3">
           <div className="flex items-center gap-1.5 text-label-sm text-on-surface-variant/45">
-            <span className="text-[10px]">Refyn Active</span>
+            <span className="text-[10px]">RefynAI Active</span>
           </div>
           <div
             className={`flex shrink-0 items-center gap-1 rounded-md border border-outline-variant/40 bg-surface-variant/30 px-2 py-1 text-on-surface-variant/75 shadow-none transition-none will-change-[border-color,box-shadow] ${shortcutGlow ? "shortcut-chip-glow" : ""}`}

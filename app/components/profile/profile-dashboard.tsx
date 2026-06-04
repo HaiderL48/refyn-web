@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { useCallback, useEffect, useState } from "react";
+import {
+  getAuthSession,
+  sessionToAuthUser,
+  subscribeAuthSession,
+  type AuthUser,
+} from "@/lib/auth-session";
 import {
   fetchCloudProfile,
   isByokProfile,
@@ -53,18 +57,17 @@ function planDisplayName(plan: string) {
 }
 
 export function ProfileDashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<CloudProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const authHydratedRef = useRef(false);
 
-  const loadProfile = useCallback(async (firebaseUser: User) => {
+  const loadProfile = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const p = await fetchCloudProfile(firebaseUser);
+      const p = await fetchCloudProfile();
       setProfile(p);
     } catch (e) {
       console.error(e);
@@ -78,50 +81,24 @@ export function ProfileDashboard() {
   }, []);
 
   useEffect(() => {
-    const auth = getFirebaseAuth();
-    let disposed = false;
-
-    const applyAuthState = (next: User | null) => {
+    const applySession = () => {
+      const session = getAuthSession();
+      const next = sessionToAuthUser(session);
       setUser(next);
       setError("");
       if (next) {
-        setProfile(null);
-        void loadProfile(next);
+        setProfile(session?.profile ?? null);
+        void loadProfile();
       } else if (PREVIEW_WITHOUT_LOGIN) {
         setProfile(DEMO_PROFILE);
       } else {
         setProfile(null);
       }
-    };
-
-    const unsubscribe = onAuthStateChanged(auth, (next) => {
-      // Ignore pre-hydration auth events to avoid signed-out flicker.
-      if (!authHydratedRef.current) return;
-      if (disposed) return;
-      applyAuthState(next);
-    });
-
-    void (async () => {
-      const authWithReady = auth as typeof auth & {
-        authStateReady?: () => Promise<void>;
-      };
-      if (typeof authWithReady.authStateReady === "function") {
-        try {
-          await authWithReady.authStateReady();
-        } catch {
-          // Continue with currentUser fallback.
-        }
-      }
-      if (disposed) return;
-      authHydratedRef.current = true;
-      applyAuthState(auth.currentUser);
       setAuthReady(true);
-    })();
-
-    return () => {
-      disposed = true;
-      unsubscribe();
     };
+
+    applySession();
+    return subscribeAuthSession(applySession);
   }, [loadProfile]);
 
   if (!authReady) {
@@ -273,7 +250,7 @@ export function ProfileDashboard() {
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-on-surface">
-                    Refyn for Windows
+                    RefynAI for Windows
                   </p>
                   <p className="mt-0.5 text-xs text-on-surface-variant">
                     Windows 10 / 11 · macOS coming soon

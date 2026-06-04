@@ -1,5 +1,5 @@
 /**
- * PromptRefine design tokens — colors, type scale, layout spacing.
+ * RefynAI design tokens — colors, type scale, layout spacing.
  * Consumed by Tailwind via @theme; import after `@import "tailwindcss"` in globals.css.
  */
 @theme inline {

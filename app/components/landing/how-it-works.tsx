@@ -34,7 +34,7 @@ export function HowItWorks() {
         />
         <FeatureStepCard
           title="Get a Smarter Prompt"
-          description="Refyn rewrites your text into a cleaner, clearer, and more AI-optimized prompt in seconds."
+          description="RefynAI rewrites your text into a cleaner, clearer, and more AI-optimized prompt in seconds."
           learnMoreHref="#download"
           visual={
             <div className="absolute inset-x-5 bottom-[62px] flex justify-center md:bottom-[82px]">

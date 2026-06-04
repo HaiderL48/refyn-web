@@ -1,11 +1,13 @@
-import type { Metadata } from "next";
 import { LegalDocumentLayout } from "@/app/components/legal/legal-document-layout";
 import { LegalSection } from "@/app/components/legal/legal-section";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Terms of Service — PromptRefine",
-  description: "Terms governing use of PromptRefine and Refyn desktop software.",
-};
+export const metadata = createPageMetadata({
+  title: "Terms of Service",
+  description:
+    "Terms governing use of RefynAI website and desktop software.",
+  path: "/terms",
+});
 
 const LAST_UPDATED = "May 16, 2026";
 
@@ -13,17 +15,17 @@ export default function TermsPage() {
   return (
     <LegalDocumentLayout
       title="Terms of Service"
-      description="Please read these terms carefully before using PromptRefine or Refyn."
+      description="Please read these terms carefully before using RefynAI."
       lastUpdated={LAST_UPDATED}
     >
       <LegalSection title="1. Agreement">
         <p>
-          By accessing our website, downloading Refyn, or creating an account, you
+          By accessing our website, downloading RefynAI, or creating an account, you
           agree to these Terms of Service (&quot;Terms&quot;). If you do not agree,
           do not use the service.
         </p>
         <p>
-          &quot;PromptRefine,&quot; &quot;Refyn,&quot; &quot;we,&quot; and
+          &quot;RefynAI,&quot; &quot;we,&quot; and
           &quot;us&quot; refer to the operator of this product. &quot;You&quot;
           means the individual or entity using the service.
         </p>
@@ -31,7 +33,7 @@ export default function TermsPage() {
 
       <LegalSection title="2. The service">
         <p>
-          Refyn is desktop software that helps refine text and prompts using AI,
+          RefynAI is desktop software that helps refine text and prompts using AI,
           triggered by a global shortcut in apps you already use. Features vary by
           plan (free, Pro, BYOK). We may update, suspend, or discontinue features
           with reasonable notice when practicable.
@@ -123,7 +125,7 @@ export default function TermsPage() {
       <LegalSection title="12. Contact">
         <p>
           Questions about these Terms: contact us through the support channel listed
-          on promptrefine.com or in the app.
+          through this website or in the app.
         </p>
       </LegalSection>
     </LegalDocumentLayout>

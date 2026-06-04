@@ -1,4 +1,5 @@
-import type { User } from "firebase/auth";
+import { apiRefynUrl } from "./api-refyn-client";
+import { getValidIdToken } from "./auth-session";
 import { getFreshIdToken } from "./fresh-id-token";
 
 export type CloudProfile = {
@@ -41,11 +42,14 @@ function isExpiredTokenResponse(
   );
 }
 
-/** Loads the signed-in user's cloud profile from api_refyn (Firestore-backed). */
-export async function fetchCloudProfile(user: User): Promise<CloudProfile> {
-  const base = getApiRefynBase();
-  let token = await getFreshIdToken(user);
-  let res = await fetch(`${base}/api/auth/me`, {
+/** Loads the signed-in user's cloud profile from api_refyn. */
+export async function fetchCloudProfile(): Promise<CloudProfile> {
+  let token = (await getValidIdToken()) || "";
+  if (!token) {
+    throw new Error("not_signed_in");
+  }
+
+  let res = await fetch(apiRefynUrl("/api/auth/me"), {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
@@ -58,8 +62,8 @@ export async function fetchCloudProfile(user: User): Promise<CloudProfile> {
       /* ignore */
     }
     if (isExpiredTokenResponse(res, body)) {
-      token = await getFreshIdToken(user);
-      res = await fetch(`${base}/api/auth/me`, {
+      token = await getFreshIdToken();
+      res = await fetch(apiRefynUrl("/api/auth/me"), {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
@@ -89,14 +93,14 @@ export function profileDailyLimit(profile: CloudProfile | null): number {
 
 export function firstNameFromProfile(
   profile: CloudProfile | null,
-  user: Pick<User, "displayName" | "email">,
+  fallback?: { displayName?: string | null; email?: string | null },
 ): string {
-  const dn = profile?.displayName?.trim() || user.displayName?.trim();
+  const dn = profile?.displayName?.trim() || fallback?.displayName?.trim();
   if (dn) {
     const first = dn.split(/\s+/)[0];
     if (first) return first;
   }
-  const email = profile?.email?.trim() || user.email?.trim();
+  const email = profile?.email?.trim() || fallback?.email?.trim();
   if (email) {
     const local = email.split("@")[0];
     if (local) return local;

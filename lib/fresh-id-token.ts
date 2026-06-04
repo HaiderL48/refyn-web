@@ -1,6 +1,10 @@
-import type { User } from "firebase/auth";
+import { getValidIdToken } from "./auth-session";
 
-/** Always mint a new ID token before sending to api_refyn (avoids auth/id-token-expired). */
-export function getFreshIdToken(user: User): Promise<string> {
-  return user.getIdToken(true);
+/** Mint or refresh the ID token before sending to api_refyn. */
+export async function getFreshIdToken(): Promise<string> {
+  const token = await getValidIdToken();
+  if (!token) {
+    throw new Error("Not signed in");
+  }
+  return token;
 }

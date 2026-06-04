@@ -66,7 +66,7 @@ export function BeforeAfter() {
           Sharper in one shortcut
         </h2>
         <p className="text-body-lg leading-relaxed text-on-surface-variant">
-          See how PromptRefine turns a vague request into a clear, specific,
+          See how RefynAI turns a vague request into a clear, specific,
           AI-optimized prompt.
         </p>
       </div>

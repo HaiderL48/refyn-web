@@ -135,7 +135,7 @@ export function FeaturesSection() {
                 Instant Prompt Enhancement
               </h3>
               <p className="mt-3 max-w-xl text-body-md leading-relaxed text-on-surface-variant">
-                Refyn instantly improves copied text, prompts, errors, and technical
+                RefynAI instantly improves copied text, prompts, errors, and technical
                 content while preserving your original intent and formatting.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
@@ -162,7 +162,7 @@ export function FeaturesSection() {
             </h3>
             <p className="mt-3 text-body-md leading-relaxed text-on-surface-variant">
               Your prompts stay private. BYOK support lets you use your own OpenAI
-              key without routing requests through Refyn servers.
+              key without routing requests through RefynAI servers.
             </p>
             <ul className="mt-auto space-y-2.5 border-t border-outline-variant/50 pt-4">
               <li className="flex items-center gap-3 text-label-md text-on-surface">
